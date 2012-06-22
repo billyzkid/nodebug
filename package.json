@@ -1,0 +1,26 @@
+{
+    "name": "nodebug",
+    "description": "Node debugging utility",
+    "keywords": ["node", "debugging", "utility"],
+    "author": "Will Allan <billyzkid@yahoo.com>",
+    "version": "0.1.0",
+    "preferGlobal": true,
+    "licenses": [{
+        "type": "MIT",
+        "url": "https://raw.github.com/billyzkid/nodebug/master/LICENSE"
+    }],
+    "bin": {
+        "nodebug": "./bin/nodebug.cmd"
+    },
+    "dependencies": {
+        "node-inspector": "0.2.x"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/billyzkid/nodebug.git"
+    },
+    "engines": {
+        "node": ">=0.6.0"
+    },
+    "bugs": "https://github.com/billyzkid/nodebug/issues"
+}
