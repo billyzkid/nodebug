@@ -1,7 +1,7 @@
 {
     "name": "nodebug",
-    "description": "Node debugging utility",
-    "keywords": ["node", "debugging", "utility"],
+    "description": "Command-line utility that simplifies node debugging",
+    "keywords": ["debug", "debugger", "debugging", "node", "inspector", "chrome", "cli"],
     "author": "Will Allan <billyzkid@yahoo.com>",
     "version": "0.1.0",
     "preferGlobal": true,
@@ -17,7 +17,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git://github.com/billyzkid/nodebug.git"
+        "url": "https://github.com/billyzkid/nodebug.git"
     },
     "engines": {
         "node": ">=0.6.0"
