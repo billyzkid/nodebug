@@ -18,6 +18,6 @@ To debug unit tests:
 
 ## What it does
 
-1. Starts node-inspector
-2. Executes the specified script with the node debugger attached
-3. Launches the debugging interface in Chrome
+1. Executes the specified script with the node debugger attached (i.e. --debug-brk)
+2. Starts node-inspector
+3. Launches the debugging interface (i.e. Chrome)

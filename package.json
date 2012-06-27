@@ -3,24 +3,25 @@
     "description": "Command-line utility that simplifies node debugging",
     "keywords": ["debug", "debugger", "debugging", "node", "inspector", "chrome", "cli"],
     "author": "Will Allan <billyzkid@yahoo.com>",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "preferGlobal": true,
     "licenses": [{
         "type": "MIT",
         "url": "https://raw.github.com/billyzkid/nodebug/master/LICENSE"
     }],
     "bin": {
-        "nodebug": "./bin/nodebug.cmd"
+        "nodebug": "./bin/nodebug.js"
     },
     "dependencies": {
-        "node-inspector": "0.2.x"
+        "node-inspector": "0.1.x",
+        "optimist": "0.3.x"
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/billyzkid/nodebug.git"
     },
     "engines": {
-        "node": ">=0.6.0"
+        "node": ">=0.8.0"
     },
     "bugs": "https://github.com/billyzkid/nodebug/issues"
 }
