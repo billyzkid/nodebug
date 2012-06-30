@@ -1,9 +1,9 @@
 {
     "name": "nodebug",
     "description": "Command-line utility that simplifies node debugging",
-    "keywords": ["debug", "debugger", "debugging", "node", "inspector", "chrome", "cli"],
+    "keywords": ["debug", "debugger", "debugging", "node", "inspector", "node-inspector", "chrome"],
     "author": "Will Allan <billyzkid@yahoo.com>",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "preferGlobal": true,
     "licenses": [{
         "type": "MIT",
