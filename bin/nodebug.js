@@ -14,6 +14,7 @@ var argv = optimist
     .options("web-port",   { "default": 8080, describe: "Web port used by node-inspector" })
     .options("debug-port", { "default": 5858, describe: "Debug port used by node" })
     .options("debug-brk",  { "default": true, describe: "Break on first line of script" })
+    .options("keep", { "default": false, describe: "Keep (do not kill) the inspector and browser processes on script completion" })
     .argv;
 
 if (argv["help"]) {
@@ -24,13 +25,18 @@ if (!argv["_"].length) {
     showError("script required", true);
 }
 
-if (process.platform !== "win32") {
-    showError("unsupported platform", false);
-}
+var scriptChild = executeScript();
+var inspectorChild = startNodeInspector();
+var browserChild = launchWebBrowser();
 
-executeScript();
-startNodeInspector();
-launchWebBrowser();
+process.on('exit', function(){
+    // kill children if they exist
+    if( ! argv['keep'] ){
+        scriptChild.kill();
+        inspectorChild.kill();
+        browserChild.kill();
+    }
+})
 
 function executeScript() {
     var nodePath = process.execPath;
@@ -48,19 +54,9 @@ function executeScript() {
 }
 
 function startNodeInspector() {
-    var nodeInspectorPath;
-    
-    switch (process.platform) {
-        case "win32":
-            nodeInspectorPath = path.join(__dirname, "..\\node_modules\\.bin\\node-inspector.cmd");
-            break;
-
-        default:
-            nodeInspectorPath = path.join(__dirname, "../node_modules/.bin/node-inspector");
-            break;
-    }
-
+    var nodeInspectorPath = firstThatExists( ['node-inspector'] )
     var nodeInspectorArgs = [];
+
     nodeInspectorArgs.push("--web-host=" + argv["web-host"]);
     nodeInspectorArgs.push("--web-port=" + argv["web-port"]);
 
@@ -73,31 +69,44 @@ function launchWebBrowser() {
 
     switch (process.platform) {
         case "win32":
-            searchPaths.push(path.join(process.env["LocalAppData"], ".\\Google\\Chrome\\Application\\chrome.exe"));
-            searchPaths.push(path.join(process.env["ProgramFiles"], ".\\Google\\Chrome\\Application\\chrome.exe"));
-            searchPaths.push(path.join(process.env["ProgramFiles(x86)"], ".\\Google\\Chrome\\Application\\chrome.exe"));
+            searchPaths.push(path.join(process.env["LocalAppData"], ".", "Google", "Chrome", "Application", "chrome.exe"));
+            searchPaths.push(path.join(process.env["ProgramFiles"], ".", "Google", "Chrome", "Application", "chrome.exe"));
+            searchPaths.push(path.join(process.env["ProgramFiles(x86)"], ".", "Google", "Chrome", "Application", "chrome.exe"));
             break;
 
         case "darwin":
-            searchPaths.push("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+            searchPaths.push( path.join("/", "Applications", "Google Chrome.app", "Contents", "MacOS", "Google Chrome") );
             break;
 
         default:
-            searchPaths.push("/opt/google/chrome/google-chrome");
+            searchPaths.push( path.join("/", "opt", "google", "chrome", "google-chrome") );
             break;
     }
 
-    for (var i = 0; i < searchPaths.length; i++) {
-        if (fs.existsSync(searchPaths[i])) {
-            webBrowserPath = searchPaths[i];
-            break;
-        }
-    }
+    webBrowserPath = firstThatExists( searchPaths );
 
     var webBrowserArgs = [];
-    webBrowserArgs.push("http://" + argv["web-host"] + ":" + argv["web-port"] + "/debug?port=" + argv["debug-port"]);
+    webBrowserArgs.push( '--user-data-dir=' + path.join(__dirname, '..', 'ChromeProfile') );
+    webBrowserArgs.push( '--app=http://' + argv["web-host"] + ":" + argv["web-port"] + "/debug?port=" + argv["debug-port"] );
 
     return child_process.execFile(webBrowserPath, webBrowserArgs);
+}
+
+function firstThatExists( paths ){
+
+    if( !paths.splice ) paths = [ paths ];
+
+    paths.filter(function(path){
+        if( fs.existsSync(path) ){
+            return path;
+        }
+    })
+
+    if( paths.length ){
+        return paths.pop();
+    } else {
+        throw Error('Could not find required file: ' + path.basename( paths[0] ))
+    }
 }
 
 function showHelp() {
