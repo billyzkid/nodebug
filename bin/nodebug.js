@@ -88,7 +88,7 @@ function executeScript() {
 function startInspector() {
     var searchPaths = [];
 
-    switch (process.platform) {	
+    switch (process.platform) {
         case "win32":
             searchPaths.push(path.join(__dirname, "..", "node_modules", ".bin", "node-inspector.cmd"));
             break;

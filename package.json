@@ -13,7 +13,7 @@
         "nodebug": "./bin/nodebug.js"
     },
     "dependencies": {
-		"node-inspector": ">=0.1.10",
+        "node-inspector": ">=0.1.10",
         "optimist": "0.3.x"
     },
     "repository": {
