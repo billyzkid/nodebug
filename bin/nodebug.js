@@ -14,7 +14,7 @@ var argv = optimist
     .options("web-port",   { "default": 8080, describe: "Web port used by node-inspector" })
     .options("debug-port", { "default": 5858, describe: "Debug port used by node" })
     .options("debug-brk",  { "default": true, describe: "Break on first line of script" })
-    .options("keep", { "default": false, describe: "Keep (do not kill) the inspector and browser processes on script completion" })
+    .options("keep-alive", { "default": false, describe: "Keep child processes alive after exit" })
     .argv;
 
 if (argv["help"]) {
@@ -25,19 +25,50 @@ if (!argv["_"].length) {
     showError("script required", true);
 }
 
-var scriptChild = executeScript();
-var inspectorChild = startNodeInspector();
-var browserChild = launchWebBrowser();
+try {
+    var scriptProcess = executeScript();
+    var inspectorProcess = startInspector();
+    var browserProcess = launchBrowser();
+} catch (error) {
+    showError(error.message, false);
+}
 
-process.on('exit', function(){
-    // kill children if they exist
-    if( ! argv['keep'] ){
-        scriptChild.kill();
-        inspectorChild.kill();
-        browserChild.kill();
+process.on("exit", function () {
+    if (!argv["keep-alive"]) {
+        if (scriptProcess) {
+            scriptProcess.kill();
+        }
+
+        if (inspectorProcess) {
+            inspectorProcess.kill();
+        }
+
+        if (browserProcess) {
+            browserProcess.kill();
+        }
     }
-})
+});
 
+/* Shows the help message and exits with success code */
+function showHelp() {
+    var help = optimist.help().trim();
+    console.log(help);
+    process.exit(0);
+}
+
+/* Shows an error message and exits with failure code */
+function showError(message, includeHelp) {
+    if (includeHelp) {
+        var help = optimist.help().trim();
+        console.error("Error: " + message + "\n" + help);
+    } else {
+        console.error("Error: " + message);
+    }
+    
+    process.exit(1);
+}
+
+/* Executes the node script */
 function executeScript() {
     var nodePath = process.execPath;
     var nodeArgs = [];
@@ -53,73 +84,62 @@ function executeScript() {
     return child_process.spawn(nodePath, nodeArgs, { stdio: "inherit" }).on("exit", process.exit);
 }
 
-function startNodeInspector() {
-    var nodeInspectorPath = firstThatExists( ['node-inspector'] )
-    var nodeInspectorArgs = [];
+/* Starts node-inspector */
+function startInspector() {
+    var searchPaths = [];
 
-    nodeInspectorArgs.push("--web-host=" + argv["web-host"]);
-    nodeInspectorArgs.push("--web-port=" + argv["web-port"]);
+    switch (process.platform) {	
+        case "win32":
+            searchPaths.push(path.join(__dirname, "..", "node_modules", ".bin", "node-inspector.cmd"));
+            break;
 
-    return child_process.execFile(nodeInspectorPath, nodeInspectorArgs);
+        default:
+            searchPaths.push(path.join(__dirname, "..", "node_modules", ".bin", "node-inspector"));
+            break;
+    }
+
+    var inspectorPath = firstExistingPath(searchPaths);
+    var inspectorArgs = [];
+
+    inspectorArgs.push("--web-host=" + argv["web-host"]);
+    inspectorArgs.push("--web-port=" + argv["web-port"]);
+
+    return child_process.execFile(inspectorPath, inspectorArgs);
 }
 
-function launchWebBrowser() {
-    var webBrowserPath;
+/* Launches a web browser (i.e. Chrome) */
+function launchBrowser() {
     var searchPaths = [];
 
     switch (process.platform) {
         case "win32":
-            searchPaths.push(path.join(process.env["LocalAppData"], ".", "Google", "Chrome", "Application", "chrome.exe"));
-            searchPaths.push(path.join(process.env["ProgramFiles"], ".", "Google", "Chrome", "Application", "chrome.exe"));
-            searchPaths.push(path.join(process.env["ProgramFiles(x86)"], ".", "Google", "Chrome", "Application", "chrome.exe"));
-            break;
-
-        case "darwin":
-            searchPaths.push( path.join("/", "Applications", "Google Chrome.app", "Contents", "MacOS", "Google Chrome") );
+            searchPaths.push(path.join(process.env["LocalAppData"], "Google", "Chrome", "Application", "chrome.exe"));
+            searchPaths.push(path.join(process.env["ProgramFiles"], "Google", "Chrome", "Application", "chrome.exe"));
+            searchPaths.push(path.join(process.env["ProgramFiles(x86)"], "Google", "Chrome", "Application", "chrome.exe"));
             break;
 
         default:
-            searchPaths.push( path.join("/", "opt", "google", "chrome", "google-chrome") );
+            searchPaths.push(path.join("/", "opt", "google", "chrome", "google-chrome"));
             break;
     }
 
-    webBrowserPath = firstThatExists( searchPaths );
+    var browserPath = firstExistingPath(searchPaths);
+    var browserArgs = [];
 
-    var webBrowserArgs = [];
-    webBrowserArgs.push( '--user-data-dir=' + path.join(__dirname, '..', 'ChromeProfile') );
-    webBrowserArgs.push( '--app=http://' + argv["web-host"] + ":" + argv["web-port"] + "/debug?port=" + argv["debug-port"] );
+    browserArgs.push("--app=http://" + argv["web-host"] + ":" + argv["web-port"] + "/debug?port=" + argv["debug-port"]);
+    browserArgs.push("--user-data-dir=" + path.join(__dirname, "..", "ChromeProfile"));
 
-    return child_process.execFile(webBrowserPath, webBrowserArgs);
+    return child_process.execFile(browserPath, browserArgs);
 }
 
-function firstThatExists( paths ){
-
-    if( !paths.splice ) paths = [ paths ];
-
-    paths.filter(function(path){
-        if( fs.existsSync(path) ){
+/* Searches an array of paths for the first one that exists */
+function firstExistingPath(paths) {
+    for (var i = 0; i < paths.length; i++) {
+        var path = paths[i];
+        if (fs.existsSync(path)) {
             return path;
         }
-    })
-
-    if( paths.length ){
-        return paths.pop();
-    } else {
-        throw Error('Could not find required file: ' + path.basename( paths[0] ))
     }
-}
 
-function showHelp() {
-    console.log(optimist.help().trim());
-    process.exit(0);
-}
-
-function showError(message, includeHelp) {
-    if (includeHelp) {
-        console.error("Error: " + message + "\n" + optimist.help().trim());
-    } else {
-        console.error("Error: " + message);
-    }
-    
-    process.exit(1);
+    throw "file not found: " + path.basename(paths[0]);
 }

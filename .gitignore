@@ -1,3 +1,7 @@
+# Ignored folders
+test
 node_modules
-npm-debug.log
 ChromeProfile
+
+# Ignored files
+npm-debug.log
