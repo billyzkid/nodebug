@@ -135,9 +135,8 @@ function launchBrowser() {
 /* Searches an array of paths for the first one that exists */
 function firstExistingPath(paths) {
     for (var i = 0; i < paths.length; i++) {
-        var path = paths[i];
-        if (fs.existsSync(path)) {
-            return path;
+        if (fs.existsSync(paths[i])) {
+            return paths[i];
         }
     }
 
