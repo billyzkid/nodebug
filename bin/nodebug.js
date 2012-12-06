@@ -118,6 +118,10 @@ function launchBrowser() {
             searchPaths.push(path.join(process.env["ProgramFiles(x86)"], "Google", "Chrome", "Application", "chrome.exe"));
             break;
 
+        case "darwin":
+            searchPaths.push(path.join("/", "Applications", "Google Chrome.app", "Contents", "MacOS", "Google Chrome"));
+            break;
+
         default:
             searchPaths.push(path.join("/", "opt", "google", "chrome", "google-chrome"));
             break;
