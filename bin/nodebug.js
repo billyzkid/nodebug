@@ -26,9 +26,9 @@ if (!argv["_"].length) {
 }
 
 try {
-    var scriptProcess = executeScript();
     var inspectorProcess = startInspector();
     var browserProcess = launchBrowser();
+    var scriptProcess = executeScript();
 } catch (error) {
     showError(error.message, false);
 }
@@ -98,7 +98,7 @@ function startInspector() {
             break;
     }
 
-    var inspectorPath = firstExistingPath(searchPaths);
+    var inspectorPath = firstExistingPath("node-inspector", searchPaths);
     var inspectorArgs = [];
 
     inspectorArgs.push("--web-host=" + argv["web-host"]);
@@ -127,7 +127,7 @@ function launchBrowser() {
             break;
     }
 
-    var browserPath = firstExistingPath(searchPaths);
+    var browserPath = firstExistingPath("chrome", searchPaths);
     var browserArgs = [];
 
     browserArgs.push("--app=http://" + argv["web-host"] + ":" + argv["web-port"] + "/debug?port=" + argv["debug-port"]);
@@ -137,12 +137,12 @@ function launchBrowser() {
 }
 
 /* Searches an array of paths for the first one that exists */
-function firstExistingPath(paths) {
+function firstExistingPath(description, paths) {
     for (var i = 0; i < paths.length; i++) {
         if (fs.existsSync(paths[i])) {
             return paths[i];
         }
     }
 
-    throw "file not found: " + path.basename(paths[0]);
+    throw new Error(description + " not found");
 }
