@@ -25,124 +25,126 @@ if (!argv["_"].length) {
     showError("script required", true);
 }
 
-try {
-    var inspectorProcess = startInspector();
-    var browserProcess = launchBrowser();
-    var scriptProcess = executeScript();
-} catch (error) {
-    showError(error.message, false);
+var inspectorPath = findInspector();
+var chromePath = findChrome();
+
+if (!inspectorPath) {
+    showError("node-inspector not found", false);
 }
+
+if (!chromePath) {
+    showError("chrome not found", false);
+}
+
+var scriptProcess = executeScript();
+var inspectorProcess = startInspector();
+var chromeProcess = launchChrome();
 
 process.on("exit", function () {
     if (!argv["keep-alive"]) {
-        if (scriptProcess) {
-            scriptProcess.kill();
-        }
-
-        if (inspectorProcess) {
-            inspectorProcess.kill();
-        }
-
-        if (browserProcess) {
-            browserProcess.kill();
-        }
+        scriptProcess.kill();
+        inspectorProcess.kill();
+        chromeProcess.kill();
     }
 });
 
-/* Shows the help message and exits with success code */
+/* Shows the help message and exits */
 function showHelp() {
-    var help = optimist.help().trim();
-    console.log(help);
+    console.log(optimist.help().trim());
     process.exit(0);
 }
 
-/* Shows an error message and exits with failure code */
+/* Shows an error message and exits */
 function showError(message, includeHelp) {
-    if (includeHelp) {
-        var help = optimist.help().trim();
-        console.error("Error: " + message + "\n" + help);
-    } else {
-        console.error("Error: " + message);
-    }
+    console.error("Error: " + message);
     
+    if (includeHelp) {
+        console.log(optimist.help().trim());
+    }
+
     process.exit(1);
 }
 
-/* Executes the node script */
-function executeScript() {
-    var nodePath = process.execPath;
-    var nodeArgs = [];
-
-    if (argv["debug-brk"]) {
-        nodeArgs.push("--debug-brk=" + argv["debug-port"]);
-    } else {
-        nodeArgs.push("--debug=" + argv["debug-port"]);
-    }
-
-    nodeArgs = nodeArgs.concat(argv["_"]);
-
-    return child_process.spawn(nodePath, nodeArgs, { stdio: "inherit" }).on("exit", process.exit);
-}
-
-/* Starts node-inspector */
-function startInspector() {
-    var searchPaths = [];
+/* Searches for chrome */
+function findChrome() {
+    var paths = [];
 
     switch (process.platform) {
         case "win32":
-            searchPaths.push(path.join(__dirname, "..", "node_modules", ".bin", "node-inspector.cmd"));
-            break;
-
-        default:
-            searchPaths.push(path.join(__dirname, "..", "node_modules", ".bin", "node-inspector"));
-            break;
-    }
-
-    var inspectorPath = firstExistingPath("node-inspector", searchPaths);
-    var inspectorArgs = [];
-
-    inspectorArgs.push("--web-host=" + argv["web-host"]);
-    inspectorArgs.push("--web-port=" + argv["web-port"]);
-
-    return child_process.execFile(inspectorPath, inspectorArgs);
-}
-
-/* Launches a web browser (i.e. Chrome) */
-function launchBrowser() {
-    var searchPaths = [];
-
-    switch (process.platform) {
-        case "win32":
-            searchPaths.push(path.join(process.env["LocalAppData"], "Google", "Chrome", "Application", "chrome.exe"));
-            searchPaths.push(path.join(process.env["ProgramFiles"], "Google", "Chrome", "Application", "chrome.exe"));
-            searchPaths.push(path.join(process.env["ProgramFiles(x86)"], "Google", "Chrome", "Application", "chrome.exe"));
+            paths.push(path.join(process.env["LocalAppData"], "Google", "Chrome", "Application", "chrome.exe"));
+            paths.push(path.join(process.env["ProgramFiles"], "Google", "Chrome", "Application", "chrome.exe"));
+            paths.push(path.join(process.env["ProgramFiles(x86)"], "Google", "Chrome", "Application", "chrome.exe"));
             break;
 
         case "darwin":
-            searchPaths.push(path.join("/", "Applications", "Google Chrome.app", "Contents", "MacOS", "Google Chrome"));
+            paths.push(path.join("/", "Applications", "Google Chrome.app", "Contents", "MacOS", "Google Chrome"));
             break;
 
         default:
-            searchPaths.push(path.join("/", "opt", "google", "chrome", "google-chrome"));
+            paths.push(path.join("/", "opt", "google", "chrome", "google-chrome"));
             break;
     }
 
-    var browserPath = firstExistingPath("chrome", searchPaths);
-    var browserArgs = [];
-
-    browserArgs.push("--app=http://" + argv["web-host"] + ":" + argv["web-port"] + "/debug?port=" + argv["debug-port"]);
-    browserArgs.push("--user-data-dir=" + path.join(__dirname, "..", "ChromeProfile"));
-
-    return child_process.execFile(browserPath, browserArgs);
+    return firstExistingPath(paths);
 }
 
-/* Searches an array of paths for the first one that exists */
-function firstExistingPath(description, paths) {
+/* Searches for node-inspector */
+function findInspector() {
+    var paths = [];
+
+    switch (process.platform) {
+        case "win32":
+            paths.push(path.join(__dirname, "..", "node_modules", ".bin", "node-inspector.cmd"));
+            break;
+
+        default:
+            paths.push(path.join(__dirname, "..", "node_modules", ".bin", "node-inspector"));
+            break;
+    }
+
+    return firstExistingPath(paths);
+}
+
+/* Searches paths for the first one that exists */
+function firstExistingPath(paths) {
     for (var i = 0; i < paths.length; i++) {
         if (fs.existsSync(paths[i])) {
             return paths[i];
         }
     }
 
-    throw new Error(description + " not found");
+    return null;
+}
+
+/* Executes the script with the node debugger attached */
+function executeScript() {
+    var args = [];
+
+    if (argv["debug-brk"]) {
+        args.push("--debug-brk=" + argv["debug-port"]);
+    } else {
+        args.push("--debug=" + argv["debug-port"]);
+    }
+
+    args = args.concat(argv["_"]);
+
+    return child_process.spawn(process.execPath, args, { stdio: "inherit" }).on("exit", process.exit);
+}
+
+/* Starts node-inspector */
+function startInspector() {
+    var args = [];
+    args.push("--web-host=" + argv["web-host"]);
+    args.push("--web-port=" + argv["web-port"]);
+
+    return child_process.spawn(inspectorPath, args);
+}
+
+/* Launches chrome */
+function launchChrome() {
+    var args = [];
+    args.push("--app=http://" + argv["web-host"] + ":" + argv["web-port"] + "/debug?port=" + argv["debug-port"]);
+    args.push("--user-data-dir=" + path.join(__dirname, "..", "ChromeProfile"));
+
+    return child_process.execFile(chromePath, args).on("exit", process.exit);
 }
