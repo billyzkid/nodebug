@@ -1,6 +1,6 @@
 # nodebug
 
-This is a command-line utility that simplifies the process of debugging [node](https://github.com/joyent/node) scripts using [node-inspector](https://github.com/dannycoates/node-inspector).
+This is a node command line utility that simplifies the process of debugging [node](https://github.com/joyent/node) scripts using [node-inspector](https://github.com/dannycoates/node-inspector).
 
 ## Installation
 
@@ -10,11 +10,11 @@ This is a command-line utility that simplifies the process of debugging [node](h
 
 To debug a typical script:
 
-    nodebug "lib\module.js"
+    nodebug module.js
 
-To debug unit tests:
+To debug unit tests (assuming [nodeunit](https://github.com/caolan/nodeunit) is installed):
 
-    nodebug "node_modules\nodeunit\bin\nodeunit" "test\module.js"
+    nodebug node_modules/nodeunit/bin/nodeunit test/module.js
 
 ## What it does
 
