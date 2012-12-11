@@ -16,6 +16,12 @@ To debug unit tests (assuming [nodeunit](https://github.com/caolan/nodeunit) is 
 
     nodebug node_modules/nodeunit/bin/nodeunit test/module.js
 
+Need to pass options to your script?
+
+	nodebug somescript.js -- -v -t --include who
+
+[Optimist](https://github.com/substack/node-optimist), which powers nodebug's options, allows for any arguments after the `--` to remain untouched.
+
 ## What it does
 
 1. Executes the specified script with the node debugger attached (i.e. --debug-brk)
