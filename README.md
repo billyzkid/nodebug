@@ -10,15 +10,15 @@ This is a node command line utility that simplifies the process of debugging [no
 
 To debug a typical script:
 
-    nodebug module.js
+    nodebug script.js
 
-To debug unit tests (assuming [nodeunit](https://github.com/caolan/nodeunit) is installed):
+To debug unit tests (e.g. using [nodeunit](https://github.com/caolan/nodeunit)):
 
-    nodebug node_modules/nodeunit/bin/nodeunit test/module.js
+    nodebug node_modules/nodeunit/bin/nodeunit tests.js
 
 Need to pass options to your script?
 
-	nodebug somescript.js -- -v -t --include who
+	nodebug script.js -- -v -t --include who
 
 [Optimist](https://github.com/substack/node-optimist), which powers nodebug's options, allows for any arguments after the `--` to remain untouched.
 
