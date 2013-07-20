@@ -74,6 +74,7 @@ function findChrome() {
             paths.push(path.join(process.env["LocalAppData"], "Google", "Chrome", "Application", "chrome.exe"));
             paths.push(path.join(process.env["ProgramFiles"], "Google", "Chrome", "Application", "chrome.exe"));
             paths.push(path.join(process.env["ProgramFiles(x86)"], "Google", "Chrome", "Application", "chrome.exe"));
+            paths.push(path.join(process.env["LocalAppData"], "Google", "Chrome SxS", "Application", "chrome.exe"));
             break;
 
         case "darwin":
