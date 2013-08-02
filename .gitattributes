@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# These files must retain LF endings
+bin/*.js text eol=lf
