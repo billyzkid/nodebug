@@ -5,3 +5,5 @@ ChromeProfile
 
 # Ignored files
 npm-debug.log
+.npmignore
+.gitattributes

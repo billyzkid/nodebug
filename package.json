@@ -3,7 +3,7 @@
     "description": "Command line utility that simplifies node debugging",
     "keywords": ["debug", "debugger", "debugging", "node", "inspector", "node-inspector", "chrome", "windows", "mac", "macos", "linux", "unix", "command line", "utility"],
     "author": "Will Allan <billyzkid@yahoo.com>",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "preferGlobal": true,
     "licenses": [{
         "type": "MIT",
